@@ -1,0 +1,97 @@
+Trivy-
+Trivy is a security scanner tool.
+
+It checks for vulnerabilities (security issues) and misconfigurations in:
+Docker images
+Project files (code, dependencies)
+Kubernetes manifests / Terraform files
+Filesystem / project directories
+Git repositories
+Infrastructure as Code (IaC) files – Terraform, Kubernetes YAML, etc.
+Dependencies in your application (e.g. package-lock.json, requirements.txt)
+
+Why Trivy is used
+To find security problems early (before deploying to production).
+To prevent deploying vulnerable images or code.
+To automate security scanning as part of CI/CD pipeline.
+
+How Trivy is used in GitHub Actions:
+You can add Trivy as a step in your GitHub Actions workflow.
+It will scan your code or image, and If it finds HIGH or CRITICAL vulnerabilities, the pipeline fails (exit-code: 1).
+Example: Scan a Docker image
+name: Trivy Scan
+
+on: [push]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t my-app:latest .
+
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'my-app:latest'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+🔹 This will:
+Build your Docker image
+Scan it using Trivy
+Stop the build if critical/high issues are found
+
+
+Example: Scan code files (filesystem)
+- name: Run Trivy on project files
+  uses: aquasecurity/trivy-action@master
+  with:
+    scan-type: 'fs'
+    severity: 'CRITICAL,HIGH'
+    exit-code: '1'
+
+This will:
+Scan all your project files and dependencies
+Fail if serious vulnerabilities are found
+
+In Linux:
+Scan a Docker Image-
+Scan the nginx:latest image
+*trivy image nginx:latest
+
+This will:
+Pull the image (if not present)
+Scan it for known vulnerabilities (CVEs)
+Show severity levels (LOW, MEDIUM, HIGH, CRITICAL)
+
+Scan only High and Critical issues-
+*trivy image --severity HIGH,CRITICAL nginx:latest
+
+*Trivy can scan Binaries
+What is a binary?
+When you compile code (like C, Go, or Java), it becomes a single executable file
+This file is called a binary (for example: myapp, mytool, program.exe)
+Inside it, there are many libraries and packages that the app uses
+
+The Problem
+You don’t know which libraries are inside that binary
+Some of those libraries might have security issues (vulnerabilities)
+But you can’t see them directly because it’s all bundled together
+
+What Trivy does
+Trivy opens that binary
+Finds which libraries are inside
+Checks if those libraries have known security problems (CVEs)
+Shows you the list of vulnerabilities
+📌 This is called binary scanning.
+
+Example:
+You have a file called myapp:
+trivy fs ./myapp
+
+Trivy will:
+Scan myapp
+Detect libraries inside
+Report if any have security issues
