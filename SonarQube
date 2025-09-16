@@ -1,0 +1,170 @@
+SonarQube-
+SonarQube is an open-source tool used to analyze source code quality.
+
+It examines your code and tells you about:
+Bugs 🐞 – parts of code that can cause errors when running.
+Vulnerabilities 🔓 – security issues that hackers could exploit.
+Code Smells 👃 – bad coding practices that make code hard to read, maintain, or scale.
+Code Coverage 📊 – how much of your code is tested by automated tests.
+Duplications 📑 – repeated code that should be refactored.
+It supports many languages (Java, Python, C#, JavaScript, C/C++, Go, etc.).
+
+⚙️ How SonarQube Works (Step-by-Step)
+
+Developer writes code
+You or your team commit code into a repository (GitHub, GitLab, Bitbucket, Azure DevOps, etc.).
+
+Sonar Scanner analyzes code
+A small tool called SonarScanner reads your project’s source code.
+It looks for issues, bugs, and follows coding standards.
+Example: If you left an unused variable, or didn’t close a database connection, SonarQube flags it.
+
+Results sent to SonarQube Server
+The analysis results are uploaded to the SonarQube dashboard (a web interface).
+Here, you get a detailed report: bugs, security risks, duplicated code, complexity, test coverage, etc.
+
+Developers/Managers review the dashboard
+Developers see exactly where issues are in the code.
+Teams can set Quality Gates (rules that define whether the code is “good enough” to merge or release).
+
+Continuous Integration (CI) integration
+SonarQube is often plugged into CI/CD pipelines (like Jenkins, GitHub Actions, GitLab CI, Azure DevOps).
+This ensures every code change is analyzed before merging.
+If the code doesn’t meet the quality gate → the build fails 🚫.
+
+🖥️ 1. SonarQube Server
+Think of this as the control center or dashboard.
+It’s a web application (usually running on http://localhost:9000 or a company server).
+All scan results from your projects are sent here.
+Developers, testers, and managers log in to see:
+Bugs, vulnerabilities, code smells
+Coverage %, duplications, complexity
+Pass/fail of Quality Gates
+
+👉 Example:
+You push code → GitHub Action runs SonarScanner → results go to SonarQube Server → you check them on a nice web dashboard.
+
+Easy Analogy
+Quality Profile = Exam syllabus (what will be checked).
+Quality Gate = Pass mark (decides pass/fail).
+
+Quality Profile = sets the rules (like a checklist).
+Quality Gate = makes the pass/fail decision based on the results of those rules.
+
+🚦 2. Quality Gate
+It’s a set of rules/conditions that decide if your code is "good enough" to move forward.
+✅ If all conditions are met → Gate passes (Green).
+❌ If any condition fails → Gate fails (Red).
+
+Common rules in a Quality Gate:
+No new bugs or vulnerabilities allowed.
+Coverage on new code ≥ 80%.
+Duplicated lines of code ≤ 3%.
+Maintainability rating ≥ B.
+
+👉 Example:
+Your project’s Quality Gate says:
+"Coverage ≥ 80%" and "No critical bugs."
+If you push new code with 70% coverage → ❌ build fails in GitHub Actions.
+So Quality Gate = Decision point: Is the code releasable or not?
+
+🧩 Quality Profile (Rulebook)
+Quality Profile as the "rulebook" SonarQube uses to check your code.
+It’s language-specific (Java, Python, JavaScript, etc.).
+Defines which coding rules should be applied.
+
+Different teams can use different profiles (strict, relaxed, security-focused, etc.).
+A Quality Profile defines which coding rules to apply.
+Example for Java:
+Classes should not have too many methods.
+Variables should not be unused.
+SQL queries should not have SELECT *.
+Passwords should not be hardcoded.
+Methods should not exceed 100 lines.
+
+Different teams can have different profiles:
+Strict Profile = 500 rules.
+Relaxed Profile = 200 rules.
+
+👉 So, Quality Profile = list of rules checked during analysis.
+
+⚙️ How SonarQube Works with GitHub Actions
+Code pushed to GitHub
+→ Triggers your GitHub Actions workflow.
+GitHub Action runs build & tests
+→ Compiles your code, runs unit tests, etc.
+SonarQube scanner runs inside the Action
+→ Analyzes your code for bugs, security issues, code smells, coverage, etc.
+Results go to SonarQube dashboard
+→ You can log in to SonarQube and see detailed reports.
+→ If Quality Gate fails ❌, the GitHub Action will fail.
+
+Example GitHub Action Workflow (Java + Maven project):
+name: CI with SonarQube
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Setup JDK
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Build and test
+      - name: Build with Maven
+        run: mvn clean install
+
+      # Run SonarQube Scanner
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v2
+        with:
+          args: >
+            -Dsonar.projectKey=my_project_key
+            -Dsonar.host.url=http://your-sonarqube-server:9000
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+What You Need
+SonarQube server
+Either installed on your machine/server (http://localhost:9000)
+Or use SonarCloud (hosted version, easy with GitHub).
+
+Authentication token
+This token works like a password for the scanner so it can connect to your SonarQube server.
+Login to your SonarQube server (e.g., http://localhost:9000 or company server).
+On the top-right → Click your profile icon → select My Account.
+Go to Security tab.
+Under Generate Tokens, give it a name (e.g., github-action-token).
+Click Generate → You’ll get a long token string.
+Copy it immediately (you won’t see it again).
+In GitHub → go to your repo → Settings > Secrets and variables > Actions > New repository secret.
+Name: SONAR_TOKEN
+Value: (paste the token)
+✅ Now your GitHub Action can authenticate to SonarQube.
+
+Project Key
+The Project Key is like a unique ID for your project inside SonarQube.
+Option A: When you create a new project manually
+Go to SonarQube dashboard.
+Click Projects > Create Project.
+Enter:
+Project Key (e.g., my_project)
+Project Name (any readable name, e.g., My Java Project).
+SonarQube shows you the Project Key to use in the scanner.
+
+Option B: Already created project
+Open your project in SonarQube dashboard.
+In the top-left corner, just below the project name, you’ll see something like:
+Project Key: my_project
